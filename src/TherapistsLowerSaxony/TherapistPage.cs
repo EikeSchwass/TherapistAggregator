@@ -31,7 +31,7 @@ namespace TherapistsLowerSaxony
             therapist.FamilyName = name.familyName;
             therapist.Offices.AddRange(ExtractOffices());
             therapist.ID = ID;
-            therapist.KVNWebsite = $"http://www.arztauskunft-niedersachsen.de/arztsuche/detailAction.action?arztId={ID}";
+            therapist.KVWebsite = $"http://www.arztauskunft-niedersachsen.de/arztsuche/detailAction.action?arztId={ID}";
             return therapist;
         }
 

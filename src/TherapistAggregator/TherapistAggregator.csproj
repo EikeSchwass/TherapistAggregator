@@ -45,7 +45,6 @@
   <ItemGroup>
     <Compile Include="AggregateProgressReport.cs" />
     <Compile Include="AggregatorLoader.cs" />
-    <Compile Include="AggregatorManager.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="HtmlExtensions.cs" />
     <Compile Include="ITherapistAggregator.cs" />
@@ -55,13 +54,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\PsychoSearch\Core\Core.csproj">
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\PsychoSearch\Core\Core.csproj">
       <Project>{67F9D3A8-F71E-4428-913F-C37AE82CDB24}</Project>
       <Name>Core</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

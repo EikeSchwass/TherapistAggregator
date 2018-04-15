@@ -14,43 +14,40 @@ namespace TherapistsLowerSaxony
         public StateName GetStateName() => StateName.LowerSaxony;
 
         private const string SearchLink = "http://www.arztauskunft-niedersachsen.de/arztsuche/extSearchAction.action";
-        private const string ChangeSite = "http://www.arztauskunft-niedersachsen.de/arztsuche/changeSite.action";
 
-        public Task<Therapist[]> DownloadTherapistsAsync(IAddressToGpsConverter addressToGpsConverter, WebHelper webHelper, IProgress<ProgressReport> progress)
+        public IEnumerable<Therapist> DownloadTherapists(IAddressToGpsConverter addressToGpsConverter, WebHelper webHelper, IProgress<ProgressReport> progress)
         {
-            return Task.Run(() =>
-                     {
-                         List<Therapist> therapists = new List<Therapist>();
-                         var searchPages = CreateSearches(webHelper).ToList();
-                         int totalPageCount = searchPages.Sum(s => s.GetPageCount());
-                         int currentPageCount = 0;
-                         var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 128 };
-                         Parallel.ForEach(searchPages,
-                                          parallelOptions,
-                                          searchPage =>
-                                          {
-                                              var currentPage = searchPage;
-                                              do
-                                              {
-                                                  var pages = Task.WhenAll(currentPage.GetLinksToTherapistSites().Select(async link => new TherapistPage(await webHelper.DoHttpGetAsync(link), link))).Result;
-                                                  therapists.AddRange(pages.Select(p => p.GetTherapist()));
-                                                  lock (searchPages)
-                                                  {
-                                                      currentPageCount++;
-                                                      progress.Report(new ProgressReport($"Page #{currentPageCount}", currentPageCount * 1.0 / totalPageCount));
-                                                  }
+            var searchPages = CreateSearches(webHelper).ToList();
+            int totalPageCount = searchPages.Sum(s => s.GetPageCount());
+            int currentPageCount = 0;
+            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 128 };
+            foreach (var searchPage in searchPages)
+            {
+                var currentPage = searchPage;
+                do
+                {
+                    var therapists = Task.WhenAll(currentPage.GetLinksToTherapistSites().Select(async link => new TherapistPage(await webHelper.DoHttpGetAsync(link), link).GetTherapist())).Result;
+                    foreach (var therapist in therapists)
+                    {
+                        foreach (var therapistOffice in therapist.Offices)
+                        {
+                            therapistOffice.Location = addressToGpsConverter.ConvertAddress(therapistOffice.Address);
+                        }
+                        yield return therapist;
+                    }
 
-                                                  if (currentPage.HasNextButton())
-                                                  {
-                                                      currentPage = currentPage.GetNextSearchPage(webHelper);
-                                                  }
-                                                  else
-                                                      break;
-                                              }
-                                              while (true);
-                                          });
-                         return therapists.ToArray();
-                     });
+                    currentPageCount++;
+                    progress.Report(new ProgressReport($"Page #{currentPageCount}", currentPageCount * 1.0 / totalPageCount));
+
+                    if (currentPage.HasNextButton())
+                    {
+                        currentPage = currentPage.GetNextSearchPage(webHelper);
+                    }
+                    else
+                        break;
+                }
+                while (true);
+            }
         }
 
         private IEnumerable<SearchPage> CreateSearches(WebHelper webHelper)

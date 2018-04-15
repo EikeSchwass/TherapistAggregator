@@ -12,7 +12,7 @@ namespace TherapistAggregator
         public IList<ITherapistAggregator> LoadAggregators()
         {
             List<ITherapistAggregator> aggregators = new List<ITherapistAggregator>();
-            var directoryName = Path.GetDirectoryName(Assembly.GetAssembly(typeof(AggregatorManager)).Location);
+            var directoryName = Path.GetDirectoryName(Assembly.GetAssembly(typeof(AggregatorLoader)).Location);
             Debug.Assert(directoryName != null);
             var directoryInfo = new DirectoryInfo(directoryName).GetParent().GetParent().GetParent();
             var dlls = directoryInfo.EnumerateFiles("*.dll", SearchOption.AllDirectories).Where(f => !f.FullName.Contains("\\packages"));
